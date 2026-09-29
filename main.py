@@ -24,12 +24,12 @@ import pygame
 import physics
 from physics import AU, DAY, BODIES
 
-# --- Window / simulation settings -------------------------------------------
+
 WIDTH, HEIGHT = 1000, 800
 FPS = 60
-DT = DAY / 4            # physics step: 6 hours (small enough for Mercury)
-TRAIL_LENGTH = 600      # points kept per trail, so memory doesn't grow forever
-TRAIL_EVERY = 4         # store a trail point every N physics steps
+DT = DAY / 4            
+TRAIL_LENGTH = 600      
+TRAIL_EVERY = 4         
 
 BACKGROUND = (8, 8, 20)
 WHITE = (240, 240, 240)
@@ -43,9 +43,9 @@ class Camera:
         self.reset()
 
     def reset(self):
-        self.scale = 250 / AU            # pixels per metre (1 AU = 250 px)
-        self.center = np.zeros(2)        # world point shown at screen centre
-        self.follow = 0                  # index of body to follow, or None
+        self.scale = 250 / AU           
+        self.center = np.zeros(2)        
+        self.follow = 0                  
 
     def to_screen(self, world):
         """World (N, 2) array -> screen (N, 2) array. y is flipped so +y is up."""
@@ -61,7 +61,7 @@ class Camera:
         before = self.to_world(mouse_pos)
         self.scale *= factor
         after = self.to_world(mouse_pos)
-        if self.follow is None:          # only shift when not locked to a body
+        if self.follow is None:         
             self.center += before - after
 
 
@@ -99,15 +99,15 @@ class Simulation:
 def draw(screen, font, sim, cam, show_trails, show_labels):
     screen.fill(BACKGROUND)
 
-    # Trails: convert each stored path to screen coordinates in one go.
+  
     if show_trails:
         for trail, body in zip(sim.trails, BODIES):
             if len(trail) > 1:
                 pts = cam.to_screen(np.array(trail))
-                dim = tuple(c // 2 for c in body[5])      # darker than planet
+                dim = tuple(c // 2 for c in body[5])      
                 pygame.draw.lines(screen, dim, False, pts.tolist(), 1)
 
-    # Bodies and labels
+    
     screen_pos = cam.to_screen(sim.pos)
     sun_pos = sim.pos[0]
     for i, (body, (x, y)) in enumerate(zip(BODIES, screen_pos)):
@@ -141,7 +141,7 @@ def main():
     clock = pygame.time.Clock()
 
     sim, cam = Simulation(), Camera()
-    steps_per_frame = 4            # 4 x 6 h = 1 simulated day per frame
+    steps_per_frame = 4            
     paused, show_trails, show_labels = False, True, True
     dragging = False
 
@@ -149,7 +149,7 @@ def main():
     while running:
         clock.tick(FPS)
 
-        # --- Input -----------------------------------------------------------
+ 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
@@ -180,20 +180,20 @@ def main():
 
             elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 dragging = True
-                cam.follow = None          # dragging switches to free camera
+                cam.follow = None          
             elif event.type == pygame.MOUSEBUTTONUP and event.button == 1:
                 dragging = False
             elif event.type == pygame.MOUSEMOTION and dragging:
                 dx, dy = event.rel
                 cam.center -= np.array([dx, -dy]) / cam.scale
 
-        # --- Update ----------------------------------------------------------
+       
         if not paused:
             sim.advance(steps_per_frame)
         if cam.follow is not None:
             cam.center = sim.pos[cam.follow].copy()
 
-        # --- Draw ------------------------------------------------------------
+       
         draw(screen, font, sim, cam, show_trails, show_labels)
         draw_hud(screen, font, sim, cam, steps_per_frame, paused, clock)
         pygame.display.flip()
